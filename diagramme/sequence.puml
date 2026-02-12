@@ -1,21 +1,59 @@
 @startuml
 participant Client
 participant Server
+participant Validator as "Middleware\nJoi Validator"
 participant TaskController
 participant Task
+participant ErrorHandler
 
+== Création d'une tâche ==
 Client -> Server: POST /api/tasks
-Server -> TaskController: createTask(req, res)
-TaskController -> Task: new Task(...)
-Task -> Task: validate()
-alt Validation réussie
-    Task --> TaskController: task
-    TaskController -> TaskController: tasks.push(task)
-    TaskController --> Server: 201 + task.toJSON()
-    Server --> Client: 201 Created
-else Validation échouée
-    Task --> TaskController: invalid
-    TaskController --> Server: 400 + error
+Server -> Validator: validate(taskSchema)
+alt Validation Joi réussie
+    Validator -> TaskController: createTask(req, res)
+    TaskController -> Task: new Task(id, title, desc, userId, status)
+    Task -> Task: validate()
+    alt Validation modèle réussie
+        Task --> TaskController: task
+        TaskController -> TaskController: tasks.push(task)
+        TaskController --> Server: 201 {success: true, data: task}
+        Server --> Client: 201 Created
+    else Validation modèle échouée
+        Task --> TaskController: invalid
+        TaskController --> Server: 400 {success: false, error}
+        Server --> Client: 400 Bad Request
+    end
+else Validation Joi échouée
+    Validator --> Server: 400 {success: false, errors: [...]}
     Server --> Client: 400 Bad Request
 end
+
+== Mise à jour du statut ==
+Client -> Server: PUT /api/tasks/:id
+Server -> Validator: validate(taskUpdateSchema)
+Validator -> TaskController: updateTask(req, res)
+TaskController -> Task: updateStatus(newStatus)
+alt Statut valide
+    Task --> TaskController: true
+    TaskController --> Server: 200 {success: true, data: task}
+    Server --> Client: 200 OK
+else Statut invalide
+    Task --> TaskController: false
+    TaskController --> Server: 400 {success: false}
+    Server --> Client: 400 Bad Request
+end
+
+== Filtrage des tâches ==
+Client -> Server: GET /api/tasks/filter?status=En cours
+Server -> TaskController: getFilteredTasks(req, res)
+TaskController -> TaskController: filter(status, userId)
+TaskController --> Server: 200 {success: true, data: [...], count}
+Server --> Client: 200 OK
+
+== Route non trouvée ==
+Client -> Server: GET /api/unknown
+Server -> ErrorHandler: notFound(req, res, next)
+ErrorHandler -> ErrorHandler: new AppError(404)
+ErrorHandler --> Server: {success: false, message}
+Server --> Client: 404 Not Found
 @enduml

@@ -1,10 +1,13 @@
 @startuml
 component "Vue\nFrontend HTML/CSS/JS" as Vue #81C784
+component "Middleware\nJoi Validator + ErrorHandler" as Middleware #EF9A9A
 component "Contrôleur\nTaskController/UserController" as Controleur #64B5F6
 component "Modèle\nTask/User" as Modele #FFD54F
 
-Vue -down-> Controleur : Requêtes HTTP
+Vue -down-> Middleware : Requêtes HTTP
+Middleware -down-> Controleur : Données validées
 Controleur -down-> Modele : Manipule
 Modele -up-> Controleur : Données
-Controleur -up-> Vue : Réponses JSON
+Controleur -up-> Vue : Réponses JSON {success, data}
+Middleware -up-> Vue : Erreurs {success: false, errors}
 @enduml

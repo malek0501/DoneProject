@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,10 +29,18 @@ app.get('/', (req, res) => {
     });
 });
 
-// Démarrage du serveur
-app.listen(PORT, () => {
-    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-    console.log(`📍 API disponible sur http://localhost:${PORT}`);
-});
+// Gestion des erreurs 404
+app.use(notFound);
+
+// Middleware de gestion des erreurs
+app.use(errorHandler);
+
+// Démarrage du serveur (pas en mode test)
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+        console.log(`📍 API disponible sur http://localhost:${PORT}`);
+    });
+}
 
 module.exports = app;

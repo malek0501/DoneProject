@@ -19,7 +19,7 @@ class UserController {
      * @param {Object} res 
      */
     getAllUsers(req, res) {
-        res.json(this.users.map(user => user.toJSON()));
+        res.json({ success: true, data: this.users.map(user => user.toJSON()) });
     }
 
     /**
@@ -31,10 +31,10 @@ class UserController {
         const user = this.users.find(u => u.id === parseInt(req.params.id));
         
         if (!user) {
-            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
         }
         
-        res.json(user.toJSON());
+        res.json({ success: true, data: user.toJSON() });
     }
 
     /**
@@ -48,11 +48,11 @@ class UserController {
         const user = new User(this.nextId++, name, email);
         
         if (!user.validate()) {
-            return res.status(400).json({ error: 'Données invalides' });
+            return res.status(400).json({ success: false, error: 'Données invalides' });
         }
         
         this.users.push(user);
-        res.status(201).json(user.toJSON());
+        res.status(201).json({ success: true, data: user.toJSON() });
     }
 
     /**
@@ -64,7 +64,7 @@ class UserController {
         const user = this.users.find(u => u.id === parseInt(req.params.id));
         
         if (!user) {
-            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
         }
         
         const { name, email } = req.body;
@@ -72,7 +72,7 @@ class UserController {
         if (name) user.name = name;
         if (email) user.email = email;
         
-        res.json(user.toJSON());
+        res.json({ success: true, data: user.toJSON() });
     }
 
     /**
@@ -84,11 +84,11 @@ class UserController {
         const index = this.users.findIndex(u => u.id === parseInt(req.params.id));
         
         if (index === -1) {
-            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
         }
         
         this.users.splice(index, 1);
-        res.status(204).send();
+        res.json({ success: true, message: 'Utilisateur supprimé' });
     }
 }
 

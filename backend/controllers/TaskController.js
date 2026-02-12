@@ -22,7 +22,26 @@ class TaskController {
             filteredTasks = this.tasks.filter(task => task.userId === parseInt(userId));
         }
         
-        res.json(filteredTasks.map(task => task.toJSON()));
+        res.json({ success: true, data: filteredTasks.map(task => task.toJSON()) });
+    }
+
+    /**
+     * Récupère les tâches filtrées par statut
+     * @param {Object} req 
+     * @param {Object} res 
+     */
+    getFilteredTasks(req, res) {
+        const { status, userId } = req.query;
+        let filtered = this.tasks;
+
+        if (status) {
+            filtered = filtered.filter(task => task.status === status);
+        }
+        if (userId) {
+            filtered = filtered.filter(task => task.userId === parseInt(userId));
+        }
+
+        res.json({ success: true, data: filtered.map(task => task.toJSON()), count: filtered.length });
     }
 
     /**
@@ -34,10 +53,10 @@ class TaskController {
         const task = this.tasks.find(t => t.id === parseInt(req.params.id));
         
         if (!task) {
-            return res.status(404).json({ error: 'Tâche non trouvée' });
+            return res.status(404).json({ success: false, error: 'Tâche non trouvée' });
         }
         
-        res.json(task.toJSON());
+        res.json({ success: true, data: task.toJSON() });
     }
 
     /**
@@ -46,16 +65,16 @@ class TaskController {
      * @param {Object} res 
      */
     createTask(req, res) {
-        const { title, description, userId } = req.body;
+        const { title, description, userId, status } = req.body;
         
-        const task = new Task(this.nextId++, title, description, userId);
+        const task = new Task(this.nextId++, title, description, userId, status);
         
         if (!task.validate()) {
-            return res.status(400).json({ error: 'Données invalides' });
+            return res.status(400).json({ success: false, error: 'Données invalides' });
         }
         
         this.tasks.push(task);
-        res.status(201).json(task.toJSON());
+        res.status(201).json({ success: true, data: task.toJSON() });
     }
 
     /**
@@ -67,7 +86,7 @@ class TaskController {
         const task = this.tasks.find(t => t.id === parseInt(req.params.id));
         
         if (!task) {
-            return res.status(404).json({ error: 'Tâche non trouvée' });
+            return res.status(404).json({ success: false, error: 'Tâche non trouvée' });
         }
         
         const { title, description, status } = req.body;
@@ -76,7 +95,7 @@ class TaskController {
         if (description) task.description = description;
         if (status) task.updateStatus(status);
         
-        res.json(task.toJSON());
+        res.json({ success: true, data: task.toJSON() });
     }
 
     /**
@@ -88,11 +107,11 @@ class TaskController {
         const index = this.tasks.findIndex(t => t.id === parseInt(req.params.id));
         
         if (index === -1) {
-            return res.status(404).json({ error: 'Tâche non trouvée' });
+            return res.status(404).json({ success: false, error: 'Tâche non trouvée' });
         }
         
         this.tasks.splice(index, 1);
-        res.status(204).send();
+        res.json({ success: true, message: 'Tâche supprimée' });
     }
 }
 

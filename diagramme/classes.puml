@@ -1,4 +1,6 @@
 @startuml
+skinparam classAttributeIconSize 0
+
 class User {
     -int id
     -string name
@@ -35,13 +37,38 @@ class TaskController {
     -Task[] tasks
     -int nextId
     +getAllTasks(req, res)
+    +getFilteredTasks(req, res)
     +getTaskById(req, res)
     +createTask(req, res)
     +updateTask(req, res)
     +deleteTask(req, res)
 }
 
+class Validator <<middleware>> {
+    +userSchema : Joi.Schema
+    +taskSchema : Joi.Schema
+    +taskUpdateSchema : Joi.Schema
+    +validate(schema) : Function
+}
+
+class AppError {
+    -int statusCode
+    -string status
+    -boolean isOperational
+    +constructor(message, statusCode)
+}
+
+class ErrorHandler <<middleware>> {
+    +errorHandler(err, req, res, next)
+    +catchAsync(fn) : Function
+    +notFound(req, res, next)
+}
+
+AppError --|> Error : extends
 User "1" -- "*" Task : possède
 UserController "1" -- "*" User : gère
 TaskController "1" -- "*" Task : gère
+Validator ..> UserController : valide entrées
+Validator ..> TaskController : valide entrées
+ErrorHandler ..> AppError : utilise
 @enduml

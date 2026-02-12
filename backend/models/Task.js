@@ -2,12 +2,12 @@
  * Classe Task - Représente une tâche
  */
 class Task {
-    constructor(id, title, description, userId, status = 'pending') {
+    constructor(id, title, description, userId, status = 'En attente') {
         this.id = id;
         this.title = title;
         this.description = description;
         this.userId = userId;
-        this.status = status; // pending, in-progress, completed
+        this.status = status; // En attente, En cours, Terminée
         this.createdAt = new Date();
         this.updatedAt = new Date();
     }
@@ -19,7 +19,7 @@ class Task {
     validate() {
         return this.title && this.title.length > 0 && 
                this.userId && 
-               ['pending', 'in-progress', 'completed'].includes(this.status);
+               ['En attente', 'En cours', 'Terminée'].includes(this.status);
     }
 
     /**
@@ -27,7 +27,7 @@ class Task {
      * @param {string} newStatus
      */
     updateStatus(newStatus) {
-        if (['pending', 'in-progress', 'completed'].includes(newStatus)) {
+        if (['En attente', 'En cours', 'Terminée'].includes(newStatus)) {
             this.status = newStatus;
             this.updatedAt = new Date();
             return true;

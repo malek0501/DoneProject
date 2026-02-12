@@ -5,6 +5,8 @@ package "Frontend" #e1f5ff {
 
 package "Backend" #fff3e0 {
     [Serveur Express]
+    [Middleware Joi Validator]
+    [Middleware ErrorHandler]
     [Routes API]
     [Contrôleurs]
     [Modèles]
@@ -14,9 +16,16 @@ package "Data" #f3e5f5 {
     database "Données en mémoire"
 }
 
+package "Tests" #e8f5e9 {
+    [Jest + Supertest]
+}
+
 [Interface HTML/CSS/JS] -down-> [Serveur Express] : HTTP/REST
 [Serveur Express] -down-> [Routes API]
-[Routes API] -down-> [Contrôleurs]
+[Routes API] -down-> [Middleware Joi Validator] : validation
+[Middleware Joi Validator] -down-> [Contrôleurs]
 [Contrôleurs] -down-> [Modèles]
 [Modèles] -down-> "Données en mémoire"
+[Serveur Express] -right-> [Middleware ErrorHandler] : erreurs
+[Jest + Supertest] -up-> [Serveur Express] : tests API
 @enduml
