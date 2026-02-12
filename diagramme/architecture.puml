@@ -1,0 +1,22 @@
+@startuml
+package "Frontend" #e1f5ff {
+    [Interface HTML/CSS/JS]
+}
+
+package "Backend" #fff3e0 {
+    [Serveur Express]
+    [Routes API]
+    [Contrôleurs]
+    [Modèles]
+}
+
+package "Data" #f3e5f5 {
+    database "Données en mémoire"
+}
+
+[Interface HTML/CSS/JS] -down-> [Serveur Express] : HTTP/REST
+[Serveur Express] -down-> [Routes API]
+[Routes API] -down-> [Contrôleurs]
+[Contrôleurs] -down-> [Modèles]
+[Modèles] -down-> "Données en mémoire"
+@enduml

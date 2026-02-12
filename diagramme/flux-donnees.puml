@@ -1,0 +1,22 @@
+@startuml
+!define GREEN #4CAF50
+!define BLUE #2196F3
+!define ORANGE #FF9800
+!define PURPLE #9C27B0
+!define RED #F44336
+
+component "Client Web" as A GREEN
+component "API REST" as B BLUE
+component "Contrôleur" as C ORANGE
+component "Modèle" as D PURPLE
+database "Mémoire" as E RED
+
+A -right-> B : 1. Requête HTTP
+B -right-> C : 2. Route
+C -right-> D : 3. Création/Validation
+D -right-> E : 4. Stockage
+E -left-> D : 5. Récupération
+D -left-> C : 6. Format JSON
+C -left-> B : 7. Réponse
+B -left-> A : 8. JSON
+@enduml

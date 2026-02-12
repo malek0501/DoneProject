@@ -1,0 +1,21 @@
+@startuml
+participant Client
+participant Server
+participant TaskController
+participant Task
+
+Client -> Server: POST /api/tasks
+Server -> TaskController: createTask(req, res)
+TaskController -> Task: new Task(...)
+Task -> Task: validate()
+alt Validation réussie
+    Task --> TaskController: task
+    TaskController -> TaskController: tasks.push(task)
+    TaskController --> Server: 201 + task.toJSON()
+    Server --> Client: 201 Created
+else Validation échouée
+    Task --> TaskController: invalid
+    TaskController --> Server: 400 + error
+    Server --> Client: 400 Bad Request
+end
+@enduml

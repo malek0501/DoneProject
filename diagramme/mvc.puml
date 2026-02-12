@@ -1,0 +1,10 @@
+@startuml
+component "Vue\nFrontend HTML/CSS/JS" as Vue #81C784
+component "Contrôleur\nTaskController/UserController" as Controleur #64B5F6
+component "Modèle\nTask/User" as Modele #FFD54F
+
+Vue -down-> Controleur : Requêtes HTTP
+Controleur -down-> Modele : Manipule
+Modele -up-> Controleur : Données
+Controleur -up-> Vue : Réponses JSON
+@enduml
