@@ -4,19 +4,29 @@
 !define ORANGE #FF9800
 !define PURPLE #9C27B0
 !define RED #F44336
+!define YELLOW #FFC107
 
 component "Client Web" as A GREEN
 component "API REST" as B BLUE
+component "Validation Joi" as V YELLOW
 component "Contrôleur" as C ORANGE
 component "Modèle" as D PURPLE
 database "Mémoire" as E RED
 
+note right of V
+  userValidator.js
+  validate(schema)
+  Vérifie req.body
+end note
+
 A -right-> B : 1. Requête HTTP
-B -right-> C : 2. Route
-C -right-> D : 3. Création/Validation
-D -right-> E : 4. Stockage
-E -left-> D : 5. Récupération
-D -left-> C : 6. Format JSON
-C -left-> B : 7. Réponse
-B -left-> A : 8. JSON
+B -right-> V : 2. Route + Body
+V -right-> C : 3. Données validées
+C -right-> D : 4. Création/Validation
+D -right-> E : 5. Stockage
+E -left-> D : 6. Récupération
+D -left-> C : 7. Format JSON
+C -left-> V : 8. Réponse
+V -left-> B : 9. JSON
+B -left-> A : 10. JSON
 @enduml

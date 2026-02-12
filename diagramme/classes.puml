@@ -25,24 +25,48 @@ class Task {
 class UserController {
     -User[] users
     -int nextId
-    +getAllUsers(req, res)
-    +getUserById(req, res)
-    +createUser(req, res)
-    +updateUser(req, res)
-    +deleteUser(req, res)
+    +getAllUsers(req, res) : void
+    +getUserById(req, res) : void
+    +createUser(req, res) : void
+    +updateUser(req, res) : void
+    +deleteUser(req, res) : void
 }
 
 class TaskController {
     -Task[] tasks
     -int nextId
-    +getAllTasks(req, res)
-    +getTaskById(req, res)
-    +createTask(req, res)
-    +updateTask(req, res)
-    +deleteTask(req, res)
+    +getAllTasks(req, res) : void
+    +getTaskById(req, res) : void
+    +createTask(req, res) : void
+    +updateTask(req, res) : void
+    +deleteTask(req, res) : void
 }
+
+class UserValidator {
+    +userSchema : Joi.ObjectSchema
+    +userUpdateSchema : Joi.ObjectSchema
+}
+
+class Validator {
+    +validate(schema) : Function
+}
+
+note right of UserValidator
+  Validation Joi pour User
+  - name: string (2-100 chars)
+  - email: format email valide
+end note
+
+note right of Validator
+  Middleware Express générique
+  pour validation Joi
+  Retourne 400 si invalide
+end note
 
 User "1" -- "*" Task : possède
 UserController "1" -- "*" User : gère
 TaskController "1" -- "*" Task : gère
+UserController ..> UserValidator : utilise
+UserController ..> Validator : utilise
+UserValidator --> User : valide
 @enduml
