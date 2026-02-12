@@ -18,6 +18,7 @@ class Task {
     -Date updatedAt
     +validate() : boolean
     +updateStatus(newStatus) : boolean
+    +updateTaskStatus(newStatus) : boolean
     +toJSON() : Object
 }
 
