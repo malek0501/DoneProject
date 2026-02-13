@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire de Tâches</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Gestionnaire de Tâches</h1>
+            <div class="user-info">
+                <span id="currentUser">Utilisateur: John Doe</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Formulaire pour créer une tâche -->
+            <section class="task-form">
+                <h2>Nouvelle Tâche</h2>
+                <form id="createTaskForm">
+                    <div class="form-group">
+                        <label for="taskTitle">Titre:</label>
+                        <input type="text" id="taskTitle" required placeholder="Entrez le titre de la tâche">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDescription">Description:</label>
+                        <textarea id="taskDescription" rows="3" placeholder="Description de la tâche"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Créer Tâche</button>
+                </form>
+            </section>
+
+            <!-- Filtres -->
+            <section class="filters">
+                <button class="btn filter-btn active" data-filter="all">Toutes</button>
+                <button class="btn filter-btn" data-filter="pending">En attente</button>
+                <button class="btn filter-btn" data-filter="in-progress">En cours</button>
+                <button class="btn filter-btn" data-filter="completed">Terminées</button>
+            </section>
+
+            <!-- Liste des tâches -->
+            <section class="tasks-container">
+                <h2>Mes Tâches</h2>
+                <div id="tasksList" class="tasks-list">
+                    <!-- Les tâches seront ajoutées dynamiquement ici -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>© 2026 Task Manager - Projet Simple Full Stack</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
