@@ -4,6 +4,15 @@
  * @description Modèle de données pour un utilisateur avec validation et sérialisation JSON
  */
 class User {
+    /** @type {number} Identifiant unique */
+    id;
+    /** @type {string} Nom complet de l'utilisateur */
+    name;
+    /** @type {string} Adresse email */
+    email;
+    /** @type {Date} Date de création de l'utilisateur */
+    createdAt;
+
     /**
      * Crée une instance d'utilisateur
      * @constructor
@@ -13,13 +22,9 @@ class User {
      * @throws {Error} Si les paramètres sont invalides lors de la validation
      */
     constructor(id, name, email) {
-        /** @type {number} Identifiant unique */
         this.id = id;
-        /** @type {string} Nom complet de l'utilisateur */
         this.name = name;
-        /** @type {string} Adresse email */
         this.email = email;
-        /** @type {Date} Date de création de l'utilisateur */
         this.createdAt = new Date();
     }
 
