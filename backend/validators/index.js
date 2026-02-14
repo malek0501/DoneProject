@@ -5,6 +5,7 @@
  */
 
 const { userSchema, userUpdateSchema } = require('./userValidator');
+const { taskSchema, taskUpdateSchema } = require('./taskValidator');
 
 /**
  * Middleware de validation Joi générique
@@ -13,6 +14,7 @@ const { userSchema, userUpdateSchema } = require('./userValidator');
  * @description Valide les données de la requête selon le schéma fourni
  * @example
  * router.post('/users', validate(userSchema), createUser);
+ * router.post('/tasks', validate(taskSchema), createTask);
  */
 const validate = (schema) => {
     return (req, res, next) => {
@@ -40,5 +42,7 @@ const validate = (schema) => {
 module.exports = {
     userSchema,
     userUpdateSchema,
+    taskSchema,
+    taskUpdateSchema,
     validate
 };

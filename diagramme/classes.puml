@@ -62,8 +62,8 @@ package "Routes" #E8F5E9 {
         +GET    /api/tasks
         +GET    /api/tasks?userId=  [filtre par utilisateur]
         +GET    /api/tasks/:id
-        +POST   /api/tasks
-        +PUT    /api/tasks/:id
+        +POST   /api/tasks         [validate(taskSchema)]
+        +PUT    /api/tasks/:id      [validate(taskUpdateSchema)]
         +DELETE /api/tasks/:id
     }
 }
@@ -72,6 +72,11 @@ package "Validation" #FFF3E0 {
     class UserValidator {
         +userSchema : Joi.ObjectSchema
         +userUpdateSchema : Joi.ObjectSchema
+    }
+
+    class TaskValidator {
+        +taskSchema : Joi.ObjectSchema
+        +taskUpdateSchema : Joi.ObjectSchema
     }
 
     class Validator {
@@ -92,9 +97,9 @@ note bottom of UserRouter
 end note
 
 note bottom of TaskRouter
-  GET /api/tasks accepte le
-  query param ?userId= pour
-  filtrer les tâches par utilisateur
+  POST et PUT passent par
+  le middleware validate()
+  GET accepte ?userId= pour filtrer
 end note
 
 note bottom of UserValidator
@@ -105,18 +110,31 @@ note bottom of UserValidator
   - name/email optionnels, min 1 champ
 end note
 
+note bottom of TaskValidator
+  taskSchema :
+  - title: string (1-200 chars, requis)
+  - description: string (max 1000, optionnel)
+  - userId: entier positif (requis)
+  - status: pending|in-progress|completed
+  taskUpdateSchema :
+  - title/description/status optionnels, min 1
+end note
+
 note bottom of Validator
   Middleware Express générique
   abortEarly: false, stripUnknown: true
   Retourne 400 + détails des erreurs
 end note
 
-User "1" -- "*" Task : possède
+User "1" *-- "*" Task : possède  >\nFK: Task.userId → User.id
 UserController "1" -- "*" User : gère
 TaskController "1" -- "*" Task : gère
 UserRouter --> UserController : délègue
 TaskRouter --> TaskController : délègue
 UserRouter ..> Validator : POST, PUT
+TaskRouter ..> Validator : POST, PUT
 Validator ..> UserValidator : utilise schémas
+Validator ..> TaskValidator : utilise schémas
 UserValidator --> User : valide
+TaskValidator --> Task : valide
 @enduml

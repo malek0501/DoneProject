@@ -110,31 +110,43 @@ else Tâche non trouvée
     TaskController --> Client: 404 Not Found
 end
 
-== Création d'une tâche ==
+== Création d'une tâche (avec validation Joi) ==
 Client -> Server: POST /api/tasks {title, description, userId}
 Server -> TaskRouter: route POST /
-TaskRouter -> TaskController: createTask(req, res)
-TaskController -> Task: new Task(id, title, description, userId)
-Task -> Task: validate()
-alt Validation réussie
-    Task --> TaskController: task
-    TaskController -> TaskController: tasks.push(task)
-    TaskController --> Client: 201 Created + task.toJSON()
-else Validation échouée
-    TaskController --> Client: 400 Bad Request
+TaskRouter -> Validator: validate(taskSchema)
+Validator -> Validator: schema.validate(req.body)
+alt Validation Joi échouée
+    Validator --> Client: 400 + {errors: [{field, message}]}
+else Validation Joi réussie
+    Validator -> TaskController: next() → createTask(req, res)
+    TaskController -> Task: new Task(id, title, description, userId)
+    Task -> Task: validate()
+    alt Validation modèle réussie
+        Task --> TaskController: task
+        TaskController -> TaskController: tasks.push(task)
+        TaskController --> Client: 201 Created + task.toJSON()
+    else Validation modèle échouée
+        TaskController --> Client: 400 Bad Request
+    end
 end
 
-== Modification d'une tâche ==
+== Modification d'une tâche (PUT avec validation Joi) ==
 Client -> Server: PUT /api/tasks/:id {title?, description?, status?}
 Server -> TaskRouter: route PUT /:id
-TaskRouter -> TaskController: updateTask(req, res)
-TaskController -> TaskController: find(t => t.id === id)
-alt Tâche trouvée
-    TaskController -> Task: updateStatus(newStatus)
-    TaskController -> TaskController: update title/description
-    TaskController --> Client: 200 OK + task.toJSON()
-else Tâche non trouvée
-    TaskController --> Client: 404 Not Found
+TaskRouter -> Validator: validate(taskUpdateSchema)
+Validator -> Validator: schema.validate(req.body)
+alt Validation Joi échouée
+    Validator --> Client: 400 + {errors: [{field, message}]}
+else Validation Joi réussie
+    Validator -> TaskController: next() → updateTask(req, res)
+    TaskController -> TaskController: find(t => t.id === id)
+    alt Tâche trouvée
+        TaskController -> Task: updateStatus(newStatus)
+        TaskController -> TaskController: update title/description
+        TaskController --> Client: 200 OK + task.toJSON()
+    else Tâche non trouvée
+        TaskController --> Client: 404 Not Found
+    end
 end
 
 == Suppression d'une tâche ==
