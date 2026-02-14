@@ -1,4 +1,6 @@
 @startuml
+title Diagramme de Classes - API Gestionnaire de Tâches
+
 class User {
     -int id
     -string name
@@ -18,7 +20,6 @@ class Task {
     -Date updatedAt
     +validate() : boolean
     +updateStatus(newStatus) : boolean
-    +updateTaskStatus(newStatus) : boolean
     +toJSON() : Object
 }
 
@@ -42,6 +43,22 @@ class TaskController {
     +deleteTask(req, res) : void
 }
 
+class UserRouter <<Express.Router>> {
+    +GET /api/users
+    +GET /api/users/:id
+    +POST /api/users
+    +PUT /api/users/:id
+    +DELETE /api/users/:id
+}
+
+class TaskRouter <<Express.Router>> {
+    +GET /api/tasks
+    +GET /api/tasks/:id
+    +POST /api/tasks
+    +PUT /api/tasks/:id
+    +DELETE /api/tasks/:id
+}
+
 class UserValidator {
     +userSchema : Joi.ObjectSchema
     +userUpdateSchema : Joi.ObjectSchema
@@ -51,22 +68,38 @@ class Validator {
     +validate(schema) : Function
 }
 
+note right of UserRouter
+  POST et PUT utilisent
+  le middleware validate()
+  avec les schémas Joi
+end note
+
+note right of TaskRouter
+  GET /api/tasks supporte
+  le query param ?userId=
+  pour filtrer par utilisateur
+end note
+
 note right of UserValidator
   Validation Joi pour User
   - name: string (2-100 chars)
   - email: format email valide
+  - userUpdateSchema: min 1 champ
 end note
 
 note right of Validator
   Middleware Express générique
   pour validation Joi
   Retourne 400 si invalide
+  avec détails des erreurs
 end note
 
 User "1" -- "*" Task : possède
 UserController "1" -- "*" User : gère
 TaskController "1" -- "*" Task : gère
-UserController ..> UserValidator : utilise
-UserController ..> Validator : utilise
+UserRouter --> UserController : délègue
+TaskRouter --> TaskController : délègue
+UserRouter ..> Validator : POST, PUT
+Validator ..> UserValidator : utilise schémas
 UserValidator --> User : valide
 @enduml
