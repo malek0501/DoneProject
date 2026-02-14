@@ -56,9 +56,9 @@ class UserController {
     }
 
     /**
-     * Met à jour un utilisateur
-     * @param {Object} req 
-     * @param {Object} res 
+     * Met à jour un utilisateur (avec validation Joi via middleware)
+     * @param {Object} req - Requête Express (body validé par userUpdateSchema)
+     * @param {Object} res - Réponse Express
      */
     updateUser(req, res) {
         const user = this.users.find(u => u.id === parseInt(req.params.id));
@@ -69,8 +69,21 @@ class UserController {
         
         const { name, email } = req.body;
         
+        // Vérifier l'unicité de l'email si modifié
+        if (email && email !== user.email) {
+            const emailExists = this.users.find(u => u.email === email && u.id !== user.id);
+            if (emailExists) {
+                return res.status(409).json({ error: 'Cet email est déjà utilisé par un autre utilisateur' });
+            }
+        }
+        
         if (name) user.name = name;
         if (email) user.email = email;
+        
+        // Validation post-mise à jour pour garantir l'intégrité des données
+        if (!user.validate()) {
+            return res.status(400).json({ error: 'Données invalides après mise à jour' });
+        }
         
         res.json(user.toJSON());
     }

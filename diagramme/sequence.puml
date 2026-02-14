@@ -1,7 +1,10 @@
 @startuml
 title Diagramme de Séquence - API REST CRUD
 participant Client
-participant Server
+participant "Serveur Express" as Server
+participant "UserRouter\n(routes/users.js)" as UserRouter
+participant "TaskRouter\n(routes/tasks.js)" as TaskRouter
+participant "Validator\n(Joi Middleware)" as Validator
 participant UserController
 participant TaskController
 participant User
@@ -9,124 +12,153 @@ participant Task
 
 == Récupération de tous les utilisateurs ==
 Client -> Server: GET /api/users
-Server -> UserController: getAllUsers(req, res)
+Server -> UserRouter: route GET /
+UserRouter -> UserController: getAllUsers(req, res)
 UserController -> UserController: users.map(u => u.toJSON())
-UserController --> Server: 200 + users[]
-Server --> Client: 200 OK + users[]
+UserController --> Client: 200 + users[]
 
 == Récupération d'un utilisateur par ID ==
 Client -> Server: GET /api/users/:id
-Server -> UserController: getUserById(req, res)
+Server -> UserRouter: route GET /:id
+UserRouter -> UserController: getUserById(req, res)
 UserController -> UserController: find(u => u.id === id)
 alt Utilisateur trouvé
-    UserController --> Server: 200 + user.toJSON()
-    Server --> Client: 200 OK + user
+    UserController --> Client: 200 OK + user.toJSON()
 else Utilisateur non trouvé
-    UserController --> Server: 404 + error
-    Server --> Client: 404 Not Found
+    UserController --> Client: 404 Not Found
 end
 
-== Création d'un utilisateur ==
-Client -> Server: POST /api/users
-Server -> UserController: createUser(req, res)
-UserController -> User: new User(id, name, email)
-User -> User: validate()
-alt Validation réussie
-    User --> UserController: user
-    UserController -> UserController: users.push(user)
-    UserController --> Server: 201 + user.toJSON()
-    Server --> Client: 201 Created + user
-else Validation échouée
-    User --> UserController: invalid
-    UserController --> Server: 400 + error
-    Server --> Client: 400 Bad Request
+== Création d'un utilisateur (avec validation Joi) ==
+Client -> Server: POST /api/users {name, email}
+Server -> UserRouter: route POST /
+UserRouter -> Validator: validate(userSchema)
+Validator -> Validator: schema.validate(req.body)
+alt Validation Joi échouée
+    Validator --> Client: 400 + {errors: [{field, message}]}
+else Validation Joi réussie
+    Validator -> UserController: next() → createUser(req, res)
+    UserController -> User: new User(id, name, email)
+    User -> User: validate()
+    alt Validation modèle réussie
+        User --> UserController: user
+        UserController -> UserController: users.push(user)
+        UserController --> Client: 201 Created + user.toJSON()
+    else Validation modèle échouée
+        UserController --> Client: 400 Bad Request
+    end
 end
 
-== Modification d'un utilisateur ==
-Client -> Server: PUT /api/users/:id
-Server -> UserController: updateUser(req, res)
-UserController -> UserController: find(u => u.id === id)
-alt Utilisateur trouvé
-    UserController -> UserController: update name/email
-    UserController --> Server: 200 + user.toJSON()
-    Server --> Client: 200 OK + user
-else Utilisateur non trouvé
-    UserController --> Server: 404 + error
-    Server --> Client: 404 Not Found
+== Modification d'un utilisateur (PUT avec validation Joi) ==
+Client -> Server: PUT /api/users/:id {name?, email?}
+Server -> UserRouter: route PUT /:id
+UserRouter -> Validator: validate(userUpdateSchema)
+Validator -> Validator: schema.validate(req.body)
+alt Validation Joi échouée
+    Validator --> Client: 400 + {errors: [{field, message}]}
+else Validation Joi réussie
+    Validator -> UserController: next() → updateUser(req, res)
+    UserController -> UserController: find(u => u.id === id)
+    alt Utilisateur trouvé
+        UserController -> UserController: vérifier unicité email
+        alt Email déjà utilisé
+            UserController --> Client: 409 Conflict
+        else Email disponible
+            UserController -> UserController: update name/email
+            UserController -> User: validate()
+            UserController --> Client: 200 OK + user.toJSON()
+        end
+    else Utilisateur non trouvé
+        UserController --> Client: 404 Not Found
+    end
 end
 
 == Suppression d'un utilisateur ==
 Client -> Server: DELETE /api/users/:id
-Server -> UserController: deleteUser(req, res)
+Server -> UserRouter: route DELETE /:id
+UserRouter -> UserController: deleteUser(req, res)
 UserController -> UserController: findIndex(u => u.id === id)
 alt Utilisateur trouvé
     UserController -> UserController: users.splice(index, 1)
-    UserController --> Server: 204 No Content
-    Server --> Client: 204 No Content
+    UserController --> Client: 204 No Content
 else Utilisateur non trouvé
-    UserController --> Server: 404 + error
-    Server --> Client: 404 Not Found
+    UserController --> Client: 404 Not Found
 end
 
 == Récupération de toutes les tâches ==
 Client -> Server: GET /api/tasks
-Server -> TaskController: getAllTasks(req, res)
+Server -> TaskRouter: route GET /
+TaskRouter -> TaskController: getAllTasks(req, res)
 TaskController -> TaskController: tasks.map(t => t.toJSON())
-TaskController --> Server: 200 + tasks[]
-Server --> Client: 200 OK + tasks[]
+TaskController --> Client: 200 OK + tasks[]
+
+== Récupération des tâches par utilisateur ==
+Client -> Server: GET /api/tasks?userId=1
+Server -> TaskRouter: route GET / + query userId
+TaskRouter -> TaskController: getAllTasks(req, res)
+TaskController -> TaskController: tasks.filter(t => t.userId === userId)
+TaskController -> TaskController: filteredTasks.map(t => t.toJSON())
+TaskController --> Client: 200 OK + tasks[]
 
 == Récupération d'une tâche par ID ==
 Client -> Server: GET /api/tasks/:id
-Server -> TaskController: getTaskById(req, res)
+Server -> TaskRouter: route GET /:id
+TaskRouter -> TaskController: getTaskById(req, res)
 TaskController -> TaskController: find(t => t.id === id)
 alt Tâche trouvée
-    TaskController --> Server: 200 + task.toJSON()
-    Server --> Client: 200 OK + task
+    TaskController --> Client: 200 OK + task.toJSON()
 else Tâche non trouvée
-    TaskController --> Server: 404 + error
-    Server --> Client: 404 Not Found
+    TaskController --> Client: 404 Not Found
 end
 
-== Création d'une tâche ==
-Client -> Server: POST /api/tasks
-Server -> TaskController: createTask(req, res)
-TaskController -> Task: new Task(id, title, description, userId)
-Task -> Task: validate()
-alt Validation réussie
-    Task --> TaskController: task
-    TaskController -> TaskController: tasks.push(task)
-    TaskController --> Server: 201 + task.toJSON()
-    Server --> Client: 201 Created + task
-else Validation échouée
-    Task --> TaskController: invalid
-    TaskController --> Server: 400 + error
-    Server --> Client: 400 Bad Request
+== Création d'une tâche (avec validation Joi) ==
+Client -> Server: POST /api/tasks {title, description, userId}
+Server -> TaskRouter: route POST /
+TaskRouter -> Validator: validate(taskSchema)
+Validator -> Validator: schema.validate(req.body)
+alt Validation Joi échouée
+    Validator --> Client: 400 + {errors: [{field, message}]}
+else Validation Joi réussie
+    Validator -> TaskController: next() → createTask(req, res)
+    TaskController -> Task: new Task(id, title, description, userId)
+    Task -> Task: validate()
+    alt Validation modèle réussie
+        Task --> TaskController: task
+        TaskController -> TaskController: tasks.push(task)
+        TaskController --> Client: 201 Created + task.toJSON()
+    else Validation modèle échouée
+        TaskController --> Client: 400 Bad Request
+    end
 end
 
-== Modification d'une tâche ==
-Client -> Server: PUT /api/tasks/:id
-Server -> TaskController: updateTask(req, res)
-TaskController -> TaskController: find(t => t.id === id)
-alt Tâche trouvée
-    TaskController -> Task: updateStatus(newStatus)
-    TaskController --> Server: 200 + task.toJSON()
-    Server --> Client: 200 OK + task
-else Tâche non trouvée
-    TaskController --> Server: 404 + error
-    Server --> Client: 404 Not Found
+== Modification d'une tâche (PUT avec validation Joi) ==
+Client -> Server: PUT /api/tasks/:id {title?, description?, status?}
+Server -> TaskRouter: route PUT /:id
+TaskRouter -> Validator: validate(taskUpdateSchema)
+Validator -> Validator: schema.validate(req.body)
+alt Validation Joi échouée
+    Validator --> Client: 400 + {errors: [{field, message}]}
+else Validation Joi réussie
+    Validator -> TaskController: next() → updateTask(req, res)
+    TaskController -> TaskController: find(t => t.id === id)
+    alt Tâche trouvée
+        TaskController -> Task: updateStatus(newStatus)
+        TaskController -> TaskController: update title/description
+        TaskController --> Client: 200 OK + task.toJSON()
+    else Tâche non trouvée
+        TaskController --> Client: 404 Not Found
+    end
 end
 
 == Suppression d'une tâche ==
 Client -> Server: DELETE /api/tasks/:id
-Server -> TaskController: deleteTask(req, res)
+Server -> TaskRouter: route DELETE /:id
+TaskRouter -> TaskController: deleteTask(req, res)
 TaskController -> TaskController: findIndex(t => t.id === id)
 alt Tâche trouvée
     TaskController -> TaskController: tasks.splice(index, 1)
-    TaskController --> Server: 204 No Content
-    Server --> Client: 204 No Content
+    TaskController --> Client: 204 No Content
 else Tâche non trouvée
-    TaskController --> Server: 404 + error
-    Server --> Client: 404 Not Found
+    TaskController --> Client: 404 Not Found
 end
 
 @enduml
